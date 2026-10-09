@@ -1,38 +1,31 @@
-/** SQLite cache of tickets, kept current by the webhook. */
-import Database from "better-sqlite3";
+/** JSON-file cache of tickets, kept current by the webhook. No native dependencies. */
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { config } from "./config.js";
 import type { Ticket } from "./odoo.js";
 
-let db: Database.Database | undefined;
+function load(): Record<string, Ticket> {
+  return existsSync(config.cachePath) ? JSON.parse(readFileSync(config.cachePath, "utf8")) : {};
+}
 
-function conn() {
-  if (!db) {
-    db = new Database(config.dbPath);
-    db.exec(
-      "CREATE TABLE IF NOT EXISTS tickets (id INTEGER PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)",
-    );
-  }
-  return db;
+function save(all: Record<string, Ticket>) {
+  const tmp = `${config.cachePath}.tmp`;
+  writeFileSync(tmp, JSON.stringify(all, null, 2));
+  renameSync(tmp, config.cachePath); // atomic replace
 }
 
 /** Merge `fields` into the cached ticket (partial payloads are fine). */
 export function upsert(id: number, fields: Record<string, unknown>): Ticket {
-  const c = conn();
-  const row = c.prepare("SELECT data FROM tickets WHERE id=?").get(id) as { data: string } | undefined;
-  const data: Ticket = { ...(row ? JSON.parse(row.data) : {}), ...fields, id };
-  c.prepare(
-    "INSERT INTO tickets(id,data,updated_at) VALUES(?,?,?) " +
-      "ON CONFLICT(id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at",
-  ).run(id, JSON.stringify(data), new Date().toISOString());
+  const all = load();
+  const data: Ticket = { ...all[id], ...fields, id };
+  all[id] = data;
+  save(all);
   return data;
 }
 
 export function get(id: number): Ticket | null {
-  const row = conn().prepare("SELECT data FROM tickets WHERE id=?").get(id) as { data: string } | undefined;
-  return row ? JSON.parse(row.data) : null;
+  return load()[id] ?? null;
 }
 
 export function listAll(): Ticket[] {
-  const rows = conn().prepare("SELECT data FROM tickets ORDER BY id DESC").all() as { data: string }[];
-  return rows.map((r) => JSON.parse(r.data));
+  return Object.values(load()).sort((a, b) => b.id - a.id);
 }

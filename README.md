@@ -2,13 +2,13 @@
 
 Node.js + TypeScript (Express) service that reads Helpdesk tickets from Odoo (JSON-2 external API,
 `/json/2/helpdesk.ticket/search_read`) and exposes a webhook that keeps a local
-SQLite cache current when a ticket changes.
+JSON-file cache current when a ticket changes.
 
 ## Run
 ```
 npm install
 cp .env.example .env   # fill in values (API key: Odoo > Preferences > Account Security)
-npm run dev            # or: npm run build && npm start
+npm start             # or: npm run dev (watch mode)
 ```
 
 ## Endpoints

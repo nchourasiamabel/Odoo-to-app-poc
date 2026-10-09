@@ -5,7 +5,7 @@ import request from "supertest";
 import { expect, test } from "vitest";
 
 process.env.WEBHOOK_TOKEN = "s3";
-process.env.DB_PATH = join(mkdtempSync(join(tmpdir(), "odoo-")), "t.db");
+process.env.CACHE_PATH = join(mkdtempSync(join(tmpdir(), "odoo-")), "cache.json");
 
 const { createApp } = await import("../src/app.js");
 const app = createApp();

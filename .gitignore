@@ -1,4 +1,5 @@
 .env
-*.db
+*.json.tmp
+helpdesk-cache.json
 node_modules/
 dist/
