@@ -1,14 +1,14 @@
 # Odoo Helpdesk POC
 
-FastAPI service that reads Helpdesk tickets from Odoo (JSON-2 external API,
+Node.js + TypeScript (Express) service that reads Helpdesk tickets from Odoo (JSON-2 external API,
 `/json/2/helpdesk.ticket/search_read`) and exposes a webhook that keeps a local
 SQLite cache current when a ticket changes.
 
 ## Run
 ```
-pip install -r requirements.txt
+npm install
 cp .env.example .env   # fill in values (API key: Odoo > Preferences > Account Security)
-uvicorn app.main:app --reload
+npm run dev            # or: npm run build && npm start
 ```
 
 ## Endpoints
@@ -33,4 +33,4 @@ passed as a query token (use HTTPS). The receiver also re-reads the full ticket
 from Odoo so the cache is complete.
 
 ## Tests
-`pytest`
+`npm test`
